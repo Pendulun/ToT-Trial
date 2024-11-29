@@ -4,12 +4,19 @@ import calendar
 
 
 class DateInterval():
+    """
+    A Date Interval with some utility functions
+    """
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date: datetime.datetime,
+                 end_date: datetime.datetime):
         self.start = start_date
         self.end = end_date
 
-    def overlap(self, other):
+    def overlap(self, other) -> bool:
+        """
+        Return if this DateInterval overlaps with another
+        """
         self._assert_same_instance(other)
         equal = self.start == other.start
         start_overlap = self.start < other.start and self.end > other.start
@@ -48,6 +55,9 @@ class DateInterval():
 
 
 class Relation():
+    """
+    This represents a Relation. It has a name and a DateInterval
+    """
 
     def __init__(self, name, date_interval: DateInterval):
         self.name = name
@@ -65,6 +75,11 @@ class Relation():
 
 
 class Relations():
+    """
+    This is a collection of Relation.
+    It can create a new random relation or add another 
+    to itself
+    """
 
     def __init__(self, relation_name):
         self._relation_name = relation_name
@@ -77,6 +92,14 @@ class Relations():
                                  entity,
                                  years: list[int],
                                  n_tries: int = 5):
+        """
+        Try to create a new random relation using the entity
+        with a DateInterval in the years passed. It will try
+        to add a relation for n_tries times. It may fail if
+        it dont generate valid DateIntervals for the relation.
+        A valid DateInterval is one that dont overlap with
+        anyother relation.
+        """
         months = list(range(1, 13))
         for _ in range(n_tries):
             starting_date, finishing_date = self.get_start_and_end_date(
@@ -87,16 +110,31 @@ class Relations():
                                                       finishing_date)
 
             new_relation = Relation(entity, new_relation_date_interval)
-            valid_relation_date_range = True
-            for relation in self._relations:
-                if relation.overlap(new_relation):
-                    valid_relation_date_range = False
 
-            if valid_relation_date_range:
+            if self._dont_overlap_with_any_relation(new_relation):
                 self._relations.add(new_relation)
                 break
-    
+
+    def _dont_overlap_with_any_relation(self, new_relation):
+        valid_relation_date_range = True
+        for relation in self._relations:
+            if relation.overlap(new_relation):
+                valid_relation_date_range = False
+        return valid_relation_date_range
+
+    def add(self, relation: Relation):
+        """
+        Tries to add the new relation to this collection.
+        It wont be added if it overlaps with any 
+        existing relation
+        """
+        if self._dont_overlap_with_any_relation(relation):
+            self._relations.add(relation)
+
     def latest(self) -> Relation:
+        """
+        Get the latest relation from this collection
+        """
         latest_rel = None
         for relation in self._relations:
             if latest_rel is None or latest_rel > relation:
@@ -130,9 +168,12 @@ class Relations():
 
 
 class StarGraph():
+    """
+    As this is a Star Graph, all relations have one end with the central node (e0)
+    """
 
     def __init__(self):
-        self.relations_map:dict[int, Relations] = dict()
+        self.relations_map: dict[int, Relations] = dict()
 
     def generate_star_graph(self, entities: list[int], relations: list[int]):
         entities_copy = entities.copy()
@@ -148,11 +189,14 @@ class StarGraph():
                 relation, Relations(relation))
             curr_relations.new_random_relation_with(entity, years)
 
+    def add_relation_with(self, relation_name: str, relation: Relation):
+        self.relations_map.setdefault(relation_name, Relations).add(relation)
+
     def __str__(self):
         final_str = ""
         for relation in self.relations_map.values():
             final_str += str(relation)
-        
+
         return final_str.strip(", ")
 
 
