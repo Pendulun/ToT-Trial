@@ -179,7 +179,6 @@ class StarGraph():
         entities_copy = entities.copy()
         random.shuffle(entities_copy)
 
-        months = list(range(1, 13))
         years = list(range(2000, 2025))
 
         self.relations_map = dict()
