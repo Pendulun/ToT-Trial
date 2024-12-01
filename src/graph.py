@@ -25,6 +25,39 @@ class DateInterval():
         contained = self.start >= other.start and self.end <= other.end
         return equal or start_overlap or end_overlap or contains or contained
 
+    @classmethod
+    def get_random(cls, years: list = None, seed: int = None):
+
+        random.seed(seed)
+        months = list(range(1, 13))
+        if years is None:
+            years = list(range(2000, 2025))
+
+        starting_date, finishing_date = cls._get_start_and_end_date(
+            cls._get_random_date(years, months),
+            cls._get_random_date(years, months))
+
+        return DateInterval(starting_date, finishing_date)
+
+    @classmethod
+    def _get_random_date(cls, years: list[int], months: list[int]):
+        random_year = random.choice(years)
+        random_month = random.choice(months)
+        _, final_day = calendar.monthrange(random_year, random_month)
+        random_day = random.choice(list(range(1, final_day)))
+
+        return datetime.datetime(random_year, random_month, random_day)
+
+    @classmethod
+    def _get_start_and_end_date(cls, first_date, second_date):
+        if first_date < second_date:
+            return first_date, second_date
+
+        if first_date > second_date:
+            return second_date, first_date
+
+        return first_date, second_date
+
     def _assert_same_instance(self, other):
         assert isinstance(
             other,
@@ -70,6 +103,9 @@ class Relation():
     def overlap(self, other: "Relation"):
         return self.date_interval.overlap(other.date_interval)
 
+    def __gt__(self, other: 'Relation'):
+        return self.date_interval > other.date_interval
+
     def __str__(self) -> str:
         return f"{self.name} in time interval {self.date_interval}"
 
@@ -88,10 +124,12 @@ class Relations():
     def __len__(self):
         return len(self._relations)
 
-    def new_random_relation_with(self,
-                                 entity,
-                                 years: list[int],
-                                 n_tries: int = 5):
+    def new_random_valid_relation_with(
+            self,
+            entity,
+            years: list[int],
+            n_tries: int = 5,
+            seed: int | list[int] = None) -> Relation:
         """
         Try to create a new random relation using the entity
         with a DateInterval in the years passed. It will try
@@ -99,37 +137,53 @@ class Relations():
         it dont generate valid DateIntervals for the relation.
         A valid DateInterval is one that dont overlap with
         anyother relation.
+        The first try is done with the seed provided. All the
+        others are made with random seed.
         """
-        months = list(range(1, 13))
-        for _ in range(n_tries):
-            starting_date, finishing_date = self.get_start_and_end_date(
-                self.get_random_date(years, months),
-                self.get_random_date(years, months))
+        seeds = list()
+        if seed is None:
+            seeds = [None] * n_tries
+        elif type(seed) == list:
+            if len(seed) < n_tries:
+                seed.extend([None] * (n_tries - len(seed)))
+        elif type(seed) == int:
+            seeds = [seed]
+            seed.extend([None] * (n_tries - 1))
+        else:
+            raise TypeError(
+                f"seed should be one of (int, list[int], None) but {type(seed)} was provided!"
+            )
 
-            new_relation_date_interval = DateInterval(starting_date,
-                                                      finishing_date)
-
-            new_relation = Relation(entity, new_relation_date_interval)
+        for id_try in range(n_tries):
+            random.seed(seeds[id_try])
+            new_relation = Relation(entity,
+                                    DateInterval.get_random(years, seed))
 
             if self._dont_overlap_with_any_relation(new_relation):
                 self._relations.add(new_relation)
-                break
+                return new_relation
+
+        return None
 
     def _dont_overlap_with_any_relation(self, new_relation):
-        valid_relation_date_range = True
         for relation in self._relations:
             if relation.overlap(new_relation):
-                valid_relation_date_range = False
-        return valid_relation_date_range
+                return False
 
-    def add(self, relation: Relation):
+        return True
+
+    def add(self, relation: Relation) -> bool:
         """
         Tries to add the new relation to this collection.
         It wont be added if it overlaps with any 
-        existing relation
+        existing relation.
+        Returns if the relation was added or not
         """
         if self._dont_overlap_with_any_relation(relation):
             self._relations.add(relation)
+            return True
+
+        return False
 
     def latest(self) -> Relation:
         """
@@ -137,7 +191,7 @@ class Relations():
         """
         latest_rel = None
         for relation in self._relations:
-            if latest_rel is None or latest_rel > relation:
+            if latest_rel is None or relation > latest_rel:
                 latest_rel = relation
 
         return latest_rel
@@ -149,27 +203,10 @@ class Relations():
 
         return final_str.strip(",")
 
-    def get_random_date(self, years: list[int], months: list[int]):
-        random_year = random.choice(years)
-        random_month = random.choice(months)
-        _, final_day = calendar.monthrange(random_year, random_month)
-        random_day = random.choice(list(range(1, final_day)))
-
-        return datetime.datetime(random_year, random_month, random_day)
-
-    def get_start_and_end_date(self, first_date, second_date):
-        if first_date < second_date:
-            return first_date, second_date
-
-        if first_date > second_date:
-            return second_date, first_date
-
-        return first_date, second_date
-
 
 class StarGraph():
     """
-    As this is a Star Graph, all relations have one end with the central node (e0)
+    As this is a Star Graph, all relations have one end with the central node (e0).
     """
 
     def __init__(self):
@@ -186,9 +223,12 @@ class StarGraph():
             relation = random.choice(relations)
             curr_relations: Relations = self.relations_map.setdefault(
                 relation, Relations(relation))
-            curr_relations.new_random_relation_with(entity, years)
+            curr_relations.new_random_valid_relation_with(entity, years)
 
-    def add_relation_with(self, relation_name: str, relation: Relation):
+    def add_edge(self, relation_name: str, relation: Relation):
+        """
+        Add an edge with the central node
+        """
         self.relations_map.setdefault(relation_name, Relations).add(relation)
 
     def __str__(self):
