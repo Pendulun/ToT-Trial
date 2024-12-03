@@ -245,8 +245,6 @@ class StarGraph():
         return [relation.strip() for relation in final_str.split(",")]
 
     def __str__(self):
-        final_str = ""
-        for relation in self.relations_map.values():
-            final_str += str(relation)
-
-        return final_str.strip(", ")
+        self_list = [el+"\n" for el in self.to_list()]
+        self_list[-1] = self_list[-1].strip("\n")
+        return "".join(self_list)
