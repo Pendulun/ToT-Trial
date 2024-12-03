@@ -71,6 +71,20 @@ class TestDateInterval(TestCase):
         expected_dict = {"start_date": "15-08-2018", "end_date": "20-08-2018"}
         self.assertDictEqual(date_dict, expected_dict)
 
+    def test_from_dict(self):
+        strformat = "%d-%m-%Y"
+        starting_dict = {"start_date": "15-08-2018", "end_date": "20-08-2018"}
+        resulting_date = DateInterval.from_dict(starting_dict, strformat)
+        expected_date = DateInterval(datetime.datetime(2018, 8, 15),
+                                     datetime.datetime(2018, 8, 20))
+        self.assertEqual(expected_date, resulting_date)
+
+    def test_raise_invalid_from_dict(self):
+        strformat = "%d-%m-%Y"
+        starting_dict = {"start_date": "15-08-2019", "end_date": "20-08-2018"}
+        with self.assertRaises(AssertionError):
+            resulting_date = DateInterval.from_dict(starting_dict, strformat)
+
 
 if __name__ == "__main__":
     main()

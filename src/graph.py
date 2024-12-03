@@ -12,6 +12,8 @@ class DateInterval():
 
     def __init__(self, start_date: datetime.datetime,
                  end_date: datetime.datetime):
+        assert_msg = f"Start date ({start_date}) must be before end date ({end_date})! "
+        assert start_date < end_date, assert_msg
         self.start = start_date
         self.end = end_date
 
@@ -68,6 +70,20 @@ class DateInterval():
         self_dict['start_date'] = self.start.strftime(strformat)
         self_dict['end_date'] = self.end.strftime(strformat)
         return self_dict
+
+    @classmethod
+    def from_dict(cls, target_dict: dict, strformat: str = None):
+        """
+        Create a DataInterval object from a dict.
+        The dict must follow: {'start_date':'...', 'end_date':"..."} 
+        """
+        if strformat is None:
+            strformat = cls.strformat
+        start_date = datetime.datetime.strptime(target_dict['start_date'],
+                                                strformat)
+        end_date = datetime.datetime.strptime(target_dict['end_date'],
+                                              strformat)
+        return DateInterval(start_date, end_date)
 
     def _assert_same_instance(self, other):
         assert isinstance(
