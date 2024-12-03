@@ -13,7 +13,7 @@ class DateInterval():
     def __init__(self, start_date: datetime.datetime,
                  end_date: datetime.datetime):
         assert_msg = f"Start date ({start_date}) must be before end date ({end_date})! "
-        assert start_date < end_date, assert_msg
+        assert start_date <= end_date, assert_msg
         self.start = start_date
         self.end = end_date
 
