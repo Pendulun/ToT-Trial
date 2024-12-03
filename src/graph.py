@@ -8,6 +8,8 @@ class DateInterval():
     A Date Interval with some utility functions
     """
 
+    strformat = "%d-%m-%Y"
+
     def __init__(self, start_date: datetime.datetime,
                  end_date: datetime.datetime):
         self.start = start_date
@@ -57,6 +59,15 @@ class DateInterval():
             return second_date, first_date
 
         return first_date, second_date
+
+    def to_dict(self, strformat: str = None) -> dict:
+        if strformat is None:
+            strformat = self.strformat
+
+        self_dict = dict()
+        self_dict['start_date'] = self.start.strftime(strformat)
+        self_dict['end_date'] = self.end.strftime(strformat)
+        return self_dict
 
     def _assert_same_instance(self, other):
         assert isinstance(

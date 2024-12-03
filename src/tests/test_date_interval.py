@@ -62,6 +62,15 @@ class TestDateInterval(TestCase):
 
         self.assertFalse(di_1.overlap(di_2))
 
+    def test_to_dict(self):
+        date = DateInterval(datetime.datetime(2018, 8, 15),
+                            datetime.datetime(2018, 8, 20))
+        strformat = "%d-%m-%Y"
+        date_dict = date.to_dict(strformat)
+
+        expected_dict = {"start_date": "15-08-2018", "end_date": "20-08-2018"}
+        self.assertDictEqual(date_dict, expected_dict)
+
 
 if __name__ == "__main__":
     main()
