@@ -1,4 +1,6 @@
 import argparse
+import json
+import pathlib
 
 from graph import StarGraph
 
@@ -37,6 +39,18 @@ def config_argparse() -> argparse.ArgumentParser:
                         required=False,
                         help="End year of relations")
 
+    parser.add_argument("--n_graphs",
+                        type=int,
+                        default=1,
+                        required=False,
+                        help="Number of graphs to generate")
+
+    parser.add_argument("--save_to",
+                        type=str,
+                        default=None,
+                        required=False,
+                        help="Path of file to save all generated graphs")
+
     return parser
 
 
@@ -47,11 +61,16 @@ if __name__ == "__main__":
 
     entities = [f'e{i}' for i in range(1, args.entities)]
     relations = [f'r{i}' for i in range(args.relations)]
-    graph = StarGraph()
-    graph.generate_star_graph(entities, relations, args.start_year,
-                              args.end_year)
-    if args.shuffle:
-        for rel in graph.shuffled_list():
-            print(rel)
-    else:
-        print(graph)
+    if args.save_to is not None:
+        graphs_list = list()
+
+    for _ in range(args.n_graphs):
+        graph = StarGraph()
+        graph.generate_star_graph(entities, relations, args.start_year,
+                                  args.end_year)
+        graphs_list.append(graph.to_dict())
+    if args.save_to is not None:
+        file_path = pathlib.Path(args.save_to)
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(file_path, 'a') as fp:
+            json.dump(graphs_list, fp)
