@@ -47,7 +47,7 @@ if __name__ == "__main__":
     assert args.start_year <= args.end_year, "Starting year can't be greater than ending year!"
 
     entities = [f'e{i}' for i in range(1, args.entities)]
-    relations = [f'r{i}' for i in range(1, args.relations)]
+    relations = [f'r{i}' for i in range(args.relations)]
     graph = StarGraph()
     graph.generate_star_graph(entities, relations, args.start_year,
                               args.end_year)
