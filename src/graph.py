@@ -233,7 +233,16 @@ class StarGraph():
         """
         Add an edge with the central node
         """
-        self.relations_map.setdefault(relation_name, Relations).add(relation)
+        self.relations_map.setdefault(relation_name,
+                                      Relations(relation_name)).add(relation)
+
+    def to_list(self) -> list[str]:
+        final_str = ""
+        for relation in self.relations_map.values():
+            final_str += str(relation)
+
+        final_str = final_str.strip(", ")
+        return [relation.strip() for relation in final_str.split(",")]
 
     def __str__(self):
         final_str = ""

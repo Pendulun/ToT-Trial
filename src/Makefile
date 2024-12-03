@@ -6,3 +6,6 @@ test_date_time:
 
 test_relations:
 	python3 -m unittest tests.test_relations
+
+test_graph:
+	python3 -m unittest tests.test_graph
