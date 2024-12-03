@@ -420,6 +420,19 @@ class StarGraph():
 
         return self.relations_map[rel_name].has(target_relation)
 
+    def n_relation_types(self) -> int:
+        """
+        Return the number of diferent relations types this graph has. This is
+        not the number of edges, but their labels
+        """
+        return len(list(self.relations_map.keys()))
+
+    def mean_nodes_per_relation_type(self) -> float:
+        """
+        Return the number of nodes divided by the number of relations
+        """
+        return len(self) / self.n_relation_types()
+
     def __len__(self):
         return len(self.to_list())
 
