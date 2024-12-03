@@ -31,7 +31,9 @@ class DateInterval():
 
     @classmethod
     def get_random(cls, years: list = None, seed: int = None):
-
+        """
+        Returns a random DateInterval in the years interval provided
+        """
         random.seed(seed)
         months = list(range(1, 13))
         if years is None:
@@ -63,6 +65,9 @@ class DateInterval():
         return first_date, second_date
 
     def to_dict(self, strformat: str = None) -> dict:
+        """
+        Returns a dict following: {'start_date':'...', 'end_date':'...'}
+        """
         if strformat is None:
             strformat = self.strformat
 
@@ -128,9 +133,17 @@ class Relation():
                    Relation), f"Cant compare {type(other)} with Relation!"
 
     def overlap(self, other: "Relation"):
+        """
+        Returns if this Relation overlaps it DateInterval wiith another
+        """
         return self.date_interval.overlap(other.date_interval)
 
     def to_dict(self) -> dict:
+        """
+        Returns a dict of this Relation following: 
+        {'name':'...', 'date_interval':{...}}.
+        See DateInterval.to_dict() for more
+        """
         self_dict = dict()
         self_dict['name'] = self.name
         self_dict["date_interval"] = self.date_interval.to_dict()
@@ -233,6 +246,12 @@ class Relations():
         return latest_rel
 
     def to_dict(self) -> dict:
+        """
+        Returns a dict of this Relations following:
+        {'rel_name':'...',
+        'relations':[{...}, {...}]}
+        See Relation.to_dict() for more.
+        """
         self_dict = dict()
         self_dict['rel_name'] = self._relation_name
 
@@ -283,6 +302,9 @@ class StarGraph():
                                       Relations(relation_name)).add(relation)
 
     def to_list(self) -> list[str]:
+        """
+        Returns a list of strings of Relations inside this graph
+        """
         if len(self.relations_map) == 0:
             return list()
 
@@ -294,12 +316,24 @@ class StarGraph():
         return [relation.strip() for relation in final_str.split(",")]
 
     def shuffled_list(self, seed: int = None) -> list[str]:
+        """
+        Returns a shuffled list of strings of Relations inside this graph
+        """
         random.seed(None)
         graph_list = self.to_list()
         random.shuffle(graph_list)
         return graph_list
 
     def to_dict(self) -> dict:
+        """
+        Returns a dict of this Graph following:
+        {rel_name:[
+            'name':'...', 
+            'relations':{...}, {...}
+            ]
+        }
+        See Relations.to_dict() for more.
+        """
         self_dict = dict()
         self_dict = {
             rel: relations.to_dict()
