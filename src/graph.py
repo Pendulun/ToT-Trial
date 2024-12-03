@@ -283,6 +283,14 @@ class StarGraph():
         random.shuffle(graph_list)
         return graph_list
 
+    def to_dict(self) -> dict:
+        self_dict = dict()
+        self_dict = {
+            rel: relations.to_dict()
+            for rel, relations in self.relations_map.items()
+        }
+        return self_dict
+
     def __len__(self):
         return len(self.to_list())
 

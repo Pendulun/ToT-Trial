@@ -45,6 +45,36 @@ class TestStarGraph(TestCase):
         graph = StarGraph()
         self.assertEqual(0, len(graph))
 
+    def test_to_dict(self):
+        graph = self.get_graph_with_3_relations()
+        expected_dict = {
+            'r1': {
+                'rel_name':
+                'r1',
+                'relations': [{
+                    'name': 'e3',
+                    'date_interval': {
+                        'start_date': '06-06-2002',
+                        'end_date': '06-05-2003'
+                    }
+                }, {
+                    'name': 'e2',
+                    'date_interval': {
+                        'start_date': '06-06-2001',
+                        'end_date': '06-05-2002'
+                    }
+                }, {
+                    'name': 'e1',
+                    'date_interval': {
+                        'start_date': '06-05-2000',
+                        'end_date': '06-05-2001'
+                    }
+                }]
+            }
+        }
+
+        self.assertDictEqual(expected_dict, graph.to_dict())
+
 
 if __name__ == "__main__":
     main()
