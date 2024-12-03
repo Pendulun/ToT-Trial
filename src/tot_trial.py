@@ -51,7 +51,10 @@ if __name__ == "__main__":
     graph = StarGraph()
     graph.generate_star_graph(entities, relations, args.start_year,
                               args.end_year)
-    relations = graph.to_list()
     if args.shuffle:
+        relations = str(graph).split('\n')
         random.shuffle(relations)
-    print(relations)
+        for rel in relations:
+            print(rel)
+    else:
+        print(graph)
