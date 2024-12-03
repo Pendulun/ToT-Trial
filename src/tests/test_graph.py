@@ -45,9 +45,8 @@ class TestStarGraph(TestCase):
         graph = StarGraph()
         self.assertEqual(0, len(graph))
 
-    def test_to_dict(self):
-        graph = self.get_graph_with_3_relations()
-        expected_dict = {
+    def get_graph_dict(self) -> dict:
+        target_dict = {
             'r1': {
                 'rel_name':
                 'r1',
@@ -72,8 +71,21 @@ class TestStarGraph(TestCase):
                 }]
             }
         }
+    
+        return target_dict
+    
+    def test_to_dict(self):
+        graph = self.get_graph_with_3_relations()
+        expected_dict = self.get_graph_dict()
 
         self.assertDictEqual(expected_dict, graph.to_dict())
+
+    def test_from_dict(self):
+        target_dict = self.get_graph_dict()
+
+        expected_graph = self.get_graph_with_3_relations()
+        resuting_graph = StarGraph.from_dict(target_dict)
+        self.assertEqual(expected_graph, resuting_graph)
 
 
 if __name__ == "__main__":

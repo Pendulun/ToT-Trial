@@ -295,6 +295,9 @@ class Relations():
         return relations_obj
 
     def has(self, relation: Relation) -> bool:
+        """
+        Check if this Relations has a relation.
+        """
         for rel in self._relations:
             if rel == relation:
                 return True
@@ -320,6 +323,9 @@ class Relations():
 
         return True
 
+    def __iter__(self):
+        yield from self._relations
+
 
 class StarGraph():
     """
@@ -327,7 +333,7 @@ class StarGraph():
     """
 
     def __init__(self):
-        self.relations_map: dict[int, Relations] = dict()
+        self.relations_map: dict[str, Relations] = dict()
 
     def generate_star_graph(self,
                             entities: list[int],
@@ -393,6 +399,27 @@ class StarGraph():
         }
         return self_dict
 
+    @classmethod
+    def from_dict(cls, target_dict: dict[str, dict]) -> 'StarGraph':
+        """
+        Returns a StarGraph object from the target_dict.
+        """
+        graph = StarGraph()
+        for rel_name, relations_dict in target_dict.items():
+            for relation_dict in relations_dict['relations']:
+                graph.add_edge(rel_name, Relation.from_dict(relation_dict))
+
+        return graph
+
+    def has(self, rel_name: str, target_relation: Relation) -> bool:
+        """
+        Check if this graph has a target_relation of type rel_name
+        """
+        if rel_name not in self.relations_map:
+            return False
+
+        return self.relations_map[rel_name].has(target_relation)
+
     def __len__(self):
         return len(self.to_list())
 
@@ -400,3 +427,14 @@ class StarGraph():
         self_list = [el + "\n" for el in self.to_list()]
         self_list[-1] = self_list[-1].strip("\n")
         return "".join(self_list)
+
+    def __eq__(self, other: 'StarGraph'):
+        if len(self) != len(other):
+            return False
+
+        for rel_name, relations in self.relations_map.items():
+            for relation in relations:
+                if not other.has(rel_name, relation):
+                    return False
+
+        return True
