@@ -114,8 +114,17 @@ class Relation():
     def overlap(self, other: "Relation"):
         return self.date_interval.overlap(other.date_interval)
 
+    def to_dict(self) -> dict:
+        self_dict = dict()
+        self_dict['name'] = self.name
+        self_dict["date_interval"] = self.date_interval.to_dict()
+        return self_dict
+
     def __gt__(self, other: 'Relation'):
         return self.date_interval > other.date_interval
+
+    def __le__(self, other: 'Relation'):
+        return self.date_interval <= other.date_interval
 
     def __str__(self) -> str:
         return f"{self.name} in time interval {self.date_interval}"
@@ -206,6 +215,16 @@ class Relations():
                 latest_rel = relation
 
         return latest_rel
+
+    def to_dict(self) -> dict:
+        self_dict = dict()
+        self_dict['rel_name'] = self._relation_name
+
+        self_dict['relations'] = [
+            relation.to_dict()
+            for relation in sorted(self._relations, reverse=True)
+        ]
+        return self_dict
 
     def __str__(self):
         final_str = ""
