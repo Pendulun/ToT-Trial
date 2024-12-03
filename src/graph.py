@@ -99,6 +99,9 @@ class DateInterval():
         self._assert_same_instance(other)
         return self.start == other.start and self.end == other.end
 
+    def __hash__(self):
+        return hash((self.start, self.end))
+
     def __lt__(self, other):
         self._assert_same_instance(other)
         return self.end < other.start
@@ -149,11 +152,32 @@ class Relation():
         self_dict["date_interval"] = self.date_interval.to_dict()
         return self_dict
 
+    @staticmethod
+    def from_dict(target_dict: dict) -> 'Relation':
+        """
+        Returns a Relation object from the target dict
+        """
+        name = target_dict['name']
+        date_interval = DateInterval.from_dict(target_dict['date_interval'])
+        return Relation(name, date_interval)
+
     def __gt__(self, other: 'Relation'):
         return self.date_interval > other.date_interval
 
     def __le__(self, other: 'Relation'):
         return self.date_interval <= other.date_interval
+
+    def __eq__(self, other: 'Relation'):
+        if self.name != other.name:
+            return False
+
+        if self.date_interval != other.date_interval:
+            return False
+
+        return True
+
+    def __hash__(self):
+        return hash((self.name, self.date_interval))
 
     def __str__(self) -> str:
         return f"{self.name} in time interval {self.date_interval}"
@@ -261,12 +285,40 @@ class Relations():
         ]
         return self_dict
 
+    @staticmethod
+    def from_dict(target_dict: dict) -> 'Relations':
+        rel_name = target_dict['rel_name']
+        relations_obj = Relations(rel_name)
+        for rel_dict in target_dict['relations']:
+            relations_obj.add(Relation.from_dict(rel_dict))
+
+        return relations_obj
+
+    def has(self, relation: Relation) -> bool:
+        for rel in self._relations:
+            if rel == relation:
+                return True
+        return False
+
     def __str__(self):
         final_str = ""
         for relation in self._relations:
             final_str += f"Relation {self._relation_name} with {relation}, "
 
         return final_str.strip(",")
+
+    def __eq__(self, other):
+        if self._relation_name != other._relation_name:
+            return False
+
+        if len(self._relations) != len(other._relations):
+            return False
+
+        for rel in self._relations:
+            if not other.has(rel):
+                return False
+
+        return True
 
 
 class StarGraph():

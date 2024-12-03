@@ -91,6 +91,39 @@ class TestRelations(TestCase):
         }
         self.assertDictEqual(expected_dict, relations.to_dict())
 
+    def test_from_dict(self):
+        rel_name = 'r1'
+        target_dict = {
+            'rel_name':
+            rel_name,
+            'relations': [{
+                'name': 'e2',
+                'date_interval': {
+                    "start_date": "19-06-2018",
+                    "end_date": "19-06-2020"
+                }
+            }, {
+                'name': 'e3',
+                'date_interval': {
+                    "start_date": "02-04-2013",
+                    "end_date": "23-03-2015"
+                }
+            }]
+        }
+
+        expected_relations = Relations(rel_name)
+        relations_to_add = [
+            Relation(
+                'e2', DateInterval(datetime(2018, 6, 19),
+                                   datetime(2020, 6, 19))),
+            Relation('e3',
+                     DateInterval(datetime(2013, 4, 2), datetime(2015, 3, 23)))
+        ]
+        for relation in relations_to_add:
+            expected_relations.add(relation)
+
+        self.assertEqual(expected_relations, Relations.from_dict(target_dict))
+
 
 if __name__ == "__main__":
     main()
