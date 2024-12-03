@@ -38,6 +38,10 @@ class TestRelations(TestCase):
             relations.add(relation)
 
         self.assertIs(relations.latest(), relations_to_add[2])
+    
+    def test_latest_relation_is_none(self):
+        relations = Relations("r1")
+        self.assertIsNone(relations.latest())
 
     def test_get_random_valid_relation(self):
         relations = Relations("r1")
