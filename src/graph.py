@@ -382,6 +382,14 @@ class StarGraph():
         random.shuffle(graph_list)
         return graph_list
 
+    def get_all_latest(self) -> dict[str, str]:
+        latest_relations = dict()
+        for rel_name, relations in self.relations_map.items():
+            latest = relations.latest().name
+            latest_relations[rel_name] = latest
+
+        return latest_relations
+
     def to_dict(self) -> dict:
         """
         Returns a dict of this Graph following:
