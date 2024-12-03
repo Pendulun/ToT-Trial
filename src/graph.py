@@ -237,12 +237,21 @@ class StarGraph():
                                       Relations(relation_name)).add(relation)
 
     def to_list(self) -> list[str]:
+        if len(self.relations_map) == 0:
+            return list()
+
         final_str = ""
         for key in sorted(self.relations_map.keys()):
             final_str += str(self.relations_map[key])
 
         final_str = final_str.strip(", ")
         return [relation.strip() for relation in final_str.split(",")]
+
+    def shuffled_list(self, seed: int = None) -> list[str]:
+        random.seed(None)
+        graph_list = self.to_list()
+        random.shuffle(graph_list)
+        return graph_list
 
     def __str__(self):
         self_list = [el + "\n" for el in self.to_list()]
