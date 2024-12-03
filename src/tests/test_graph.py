@@ -71,9 +71,9 @@ class TestStarGraph(TestCase):
                 }]
             }
         }
-    
+
         return target_dict
-    
+
     def test_to_dict(self):
         graph = self.get_graph_with_3_relations()
         expected_dict = self.get_graph_dict()
