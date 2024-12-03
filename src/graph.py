@@ -238,13 +238,13 @@ class StarGraph():
 
     def to_list(self) -> list[str]:
         final_str = ""
-        for relation in self.relations_map.values():
-            final_str += str(relation)
+        for key in sorted(self.relations_map.keys()):
+            final_str += str(self.relations_map[key])
 
         final_str = final_str.strip(", ")
         return [relation.strip() for relation in final_str.split(",")]
 
     def __str__(self):
-        self_list = [el+"\n" for el in self.to_list()]
+        self_list = [el + "\n" for el in self.to_list()]
         self_list[-1] = self_list[-1].strip("\n")
         return "".join(self_list)
