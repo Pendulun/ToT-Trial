@@ -212,11 +212,15 @@ class StarGraph():
     def __init__(self):
         self.relations_map: dict[int, Relations] = dict()
 
-    def generate_star_graph(self, entities: list[int], relations: list[int]):
+    def generate_star_graph(self,
+                            entities: list[int],
+                            relations: list[int],
+                            start_year: int = 2000,
+                            end_year: int = 2025):
         entities_copy = entities.copy()
         random.shuffle(entities_copy)
 
-        years = list(range(2000, 2025))
+        years = list(range(start_year, end_year))
 
         self.relations_map = dict()
         for entity in entities_copy:
