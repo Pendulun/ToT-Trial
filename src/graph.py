@@ -253,6 +253,9 @@ class StarGraph():
         random.shuffle(graph_list)
         return graph_list
 
+    def __len__(self):
+        return len(self.to_list())
+
     def __str__(self):
         self_list = [el + "\n" for el in self.to_list()]
         self_list[-1] = self_list[-1].strip("\n")
