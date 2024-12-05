@@ -383,6 +383,11 @@ class StarGraph():
         return graph_list
 
     def get_all_latest(self) -> dict[str, str]:
+        """
+        Return the entity with the latest relation for every relation.
+        
+        Return a dict with relation name as key and entity name as value
+        """
         latest_relations = dict()
         for rel_name, relations in self.relations_map.items():
             latest = relations.latest().name
