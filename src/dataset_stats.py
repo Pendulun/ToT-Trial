@@ -1,5 +1,4 @@
 import argparse
-from collections import Counter
 import json
 import pathlib
 import pandas as pd
@@ -30,7 +29,6 @@ def save_stats(data_path: str, save_to: str):
 
     graph_sizes = list()
     relation_count = list()
-    mean_nodes_per_relation = list()
     for graph_dict in graphs_dicts:
         graph = StarGraph.from_dict(graph_dict)
         graph_sizes.append(len(graph))
