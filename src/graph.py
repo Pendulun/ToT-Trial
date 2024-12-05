@@ -385,7 +385,7 @@ class StarGraph():
     def get_all_latest(self) -> dict[str, str]:
         """
         Return the entity with the latest relation for every relation.
-        
+
         Return a dict with relation name as key and entity name as value
         """
         latest_relations = dict()
@@ -439,6 +439,13 @@ class StarGraph():
         not the number of edges, but their labels
         """
         return len(list(self.relations_map.keys()))
+
+    def n_relations(self) -> int:
+        sum = 0
+        for relations in self.relations_map.values():
+            sum += len(relations)
+
+        return sum
 
     def mean_nodes_per_relation_type(self) -> float:
         """
