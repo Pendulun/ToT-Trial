@@ -13,6 +13,10 @@ class Evaluator(ABC):
 
 
 class LocalLLMEvaluator(Evaluator):
+    """
+    This is the evaluator to be used when running the local-llm project
+    from google.
+    """
 
     def __init__(self, url: str):
         super().__init__()
