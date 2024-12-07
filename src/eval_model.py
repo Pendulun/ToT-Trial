@@ -4,14 +4,17 @@ from collections import namedtuple
 import json
 import pathlib
 
+from dotenv import dotenv_values
 from tqdm import tqdm
 
-from evaluators import Evaluator, LocalLLMEvaluator
+from evaluators import LLM
 from graph import StarGraph
 
 DataInstance = namedtuple(
     "DataInstance",
     ['graph_id', 'relation_name', 'target_entity', 'relations'])
+
+LLM_answer_max_tokens = 10
 
 
 def config_argparser() -> argparse.ArgumentParser:
@@ -40,6 +43,24 @@ def config_argparser() -> argparse.ArgumentParser:
         required=False,
         default=-1,
         help="Num of total instances to evaluate. Default -1 (all)")
+
+    parser.add_argument(
+        "--url",
+        type=str,
+        required=False,
+        default="http://localhost:8000/v1",
+        help=
+        "URL for the model. Default: http://localhost:8000/v1 as when running local-llm"
+    )
+
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        required=False,
+        default="",
+        help=
+        "The model name to be used such as microsoft/Phi-3-mini-4k-instruct. Default is ''"
+        + " as when running with local-llm")
     return parser
 
 
@@ -76,7 +97,7 @@ def get_eval_pair(data_path: str,
 
 
 def print_instance(data_path: str,
-                   evaluator: Evaluator,
+                   llm: LLM,
                    shuffle: bool = False,
                    n_graphs: int = -1,
                    n_instances: int = -1):
@@ -99,8 +120,7 @@ def print_instance(data_path: str,
         curr_content = content_fmt.format(data_instance.relation_name,
                                           data_instance.relations)
 
-        # response = evaluator.answer(curr_content)
-        response = ""
+        response = llm.answer(curr_content, max_tokens=LLM_answer_max_tokens)
         pairs.append((data_instance.target_entity, response))
 
     print(pairs)
@@ -109,7 +129,7 @@ def print_instance(data_path: str,
 def get_total_instances(n_graphs: int, n_instances: int,
                         graphs_dicts: list[dict]) -> int:
     """
-    Calculate to total number of instances that will be generated
+    Calculate the total number of instances that will be evaluated
     """
     tot_instances = 0
     for graph_id, graph_dict in enumerate(graphs_dicts):
@@ -131,7 +151,7 @@ def get_total_instances(n_graphs: int, n_instances: int,
 
 if __name__ == "__main__":
     args = config_argparser().parse_args()
-    url = "http://localhost:8000/v1"
-    evaluator = LocalLLMEvaluator(url)
-    print_instance(args.data, evaluator, args.shuffle, args.n_graphs,
+    secrets = dotenv_values(".env")
+    llm = LLM(args.url, secrets['API_KEY'], args.model_name)
+    print_instance(args.data, llm, args.shuffle, args.n_graphs,
                    args.n_instances)

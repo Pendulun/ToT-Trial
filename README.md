@@ -1,1 +1,3 @@
 Test using the same knowledge graph generation as the [Test of Time](https://arxiv.org/pdf/2406.09170). The focus is to generate star graphs in which each node is an entity in the text and each edge is annotated with the type of relationship and the time interval (dates) of the relationship. Because it is a star graph, the entity in the middle has a relationship with every other entity. In the end, I want to evaluate the difference in performance in detecting updated information when showing the entire text related to the graph or just the last relationships of each type of relationship.
+
+To run the `src/eval_model.py` one should create a `src/.env` file specifying the `API_KEY=` value. It will be loaded during run time to connect to the given url.
