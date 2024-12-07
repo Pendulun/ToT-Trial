@@ -61,14 +61,7 @@ def get_eval_pair(data_path: str,
     for graph_id, graph_dict in enumerate(graphs_dicts):
         graph = StarGraph.from_dict(graph_dict)
 
-        text_to_show = ""
-        if shuffle:
-            text_to_show = ""
-            for text in graph.shuffled_list():
-                text_to_show += text + "\n"
-            text_to_show = text_to_show.strip("\n")
-        else:
-            text_to_show = str(graph)
+        text_to_show = graph.get_shuffled_str() if shuffle else str(graph)
 
         for rel, entity in graph.get_all_latest().items():
             if instance_count == n_instances:
