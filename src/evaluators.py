@@ -1,4 +1,6 @@
-from openai import OpenAI
+import time
+
+from openai import OpenAI, OpenAIError
 
 
 class LLM():
@@ -16,19 +18,27 @@ class LLM():
         self.model_name = model_name
 
     def answer(self, text: str, **kwargs) -> str:
-        """
-        Return the LLM answer to the given text.
-        """
-        chat_completion = self.client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": text,
-                },
-            ],
-            model=self.model_name,
-            **kwargs)
-        for choice in chat_completion.choices:
-            response = choice.message.content
-
-        return response
+        for _ in range(5):  # Tentar até 5 vezes
+            try:
+                chat_completion = self.client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": text,
+                        },
+                    ],
+                    model=self.model_name,
+                    **kwargs)
+                for choice in chat_completion.choices:
+                    return choice.message.content
+            except OpenAIError as e:
+                if e.http_status == 503 and "model is currently loading" in str(
+                        e):
+                    print(
+                        "Modelo carregando. Tentando novamente em 10 segundos..."
+                    )
+                    time.sleep(
+                        10)  # Aguarde 10 segundos antes de tentar novamente
+                else:
+                    raise e
+        raise RuntimeError("O modelo não carregou após múltiplas tentativas.")
