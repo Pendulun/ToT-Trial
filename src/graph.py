@@ -56,13 +56,10 @@ class DateInterval():
 
     @classmethod
     def _get_start_and_end_date(cls, first_date, second_date):
-        if first_date < second_date:
+        if first_date <= second_date:
             return first_date, second_date
 
-        if first_date > second_date:
-            return second_date, first_date
-
-        return first_date, second_date
+        return second_date, first_date
 
     def to_dict(self, strformat: str = None) -> dict:
         """
@@ -132,13 +129,14 @@ class Relation():
         self.date_interval: DateInterval = date_interval
 
     def _assert_same_instance(self, other):
-        isinstance(other,
-                   Relation), f"Cant compare {type(other)} with Relation!"
+        assert isinstance(
+            other, Relation), f"Cant compare {type(other)} with Relation!"
 
     def overlap(self, other: "Relation"):
         """
         Returns if this Relation overlaps it DateInterval wiith another
         """
+        self._assert_same_instance(other)
         return self.date_interval.overlap(other.date_interval)
 
     def to_dict(self) -> dict:
@@ -162,16 +160,16 @@ class Relation():
         return Relation(name, date_interval)
 
     def __gt__(self, other: 'Relation'):
+        self._assert_same_instance(other)
         return self.date_interval > other.date_interval
 
     def __le__(self, other: 'Relation'):
+        self._assert_same_instance(other)
         return self.date_interval <= other.date_interval
 
     def __eq__(self, other: 'Relation'):
-        if self.name != other.name:
-            return False
-
-        if self.date_interval != other.date_interval:
+        self._assert_same_instance(other)
+        if self.name != other.name or self.date_interval != other.date_interval:
             return False
 
         return True
@@ -377,10 +375,17 @@ class StarGraph():
         """
         Returns a shuffled list of strings of Relations inside this graph
         """
-        random.seed(None)
+        random.seed(seed)
         graph_list = self.to_list()
         random.shuffle(graph_list)
         return graph_list
+
+    def get_shuffled_str(self, seed: int = None) -> str:
+        shuffled_text = ""
+        for text in self.shuffled_list(seed):
+            shuffled_text += text + "\n"
+        shuffled_text = shuffled_text.strip("\n")
+        return shuffled_text
 
     def get_all_latest(self) -> dict[str, str]:
         """

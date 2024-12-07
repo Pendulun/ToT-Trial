@@ -121,6 +121,14 @@ class TestStarGraph(TestCase):
         expected_latests = {'r1': 'e3', 'r2': 'e4'}
         self.assertDictEqual(expected_latests, graph.get_all_latest())
 
+    def test_get_shuffled_text(self):
+        graph = self.get_graph_with_3_relations()
+        self.assertNotEqual(graph.get_shuffled_str(42), str(graph))
+
+    def test_get_n_relations(self):
+        graph = self.get_graph_with_3_relations()
+        self.assertEqual(3, graph.n_relations())
+
 
 if __name__ == "__main__":
     main()
