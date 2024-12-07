@@ -18,7 +18,7 @@ class LLM():
         self.model_name = model_name
 
     def answer(self, text: str, **kwargs) -> str:
-        for _ in range(5):  # Tentar até 5 vezes
+        for attempt in range(5):  # Tentar até 5 vezes
             try:
                 chat_completion = self.client.chat.completions.create(
                     messages=[
@@ -32,13 +32,13 @@ class LLM():
                 for choice in chat_completion.choices:
                     return choice.message.content
             except OpenAIError as e:
-                if e.http_status == 503 and "model is currently loading" in str(
-                        e):
+                error_message = str(e)
+                if "model is currently loading" in error_message:
                     print(
-                        "Modelo carregando. Tentando novamente em 10 segundos..."
+                        f"Tentativa {attempt + 1}/5: Modelo ainda está carregando. Aguardando 10 segundos..."
                     )
-                    time.sleep(
-                        10)  # Aguarde 10 segundos antes de tentar novamente
+                    time.sleep(10)
                 else:
+                    print(f"Erro inesperado: {error_message}")
                     raise e
-        raise RuntimeError("O modelo não carregou após múltiplas tentativas.")
+        raise RuntimeError(f"O modelo não carregou após várias tentativas.")
