@@ -33,7 +33,7 @@ class LLM():
                     return choice.message.content
             except OpenAIError as e:
                 error_message = str(e)
-                if "model is currently loading" in error_message:
+                if "is currently loading" in error_message:
                     print(
                         f"Tentativa {attempt + 1}/5: Modelo ainda está carregando. Aguardando 10 segundos..."
                     )
