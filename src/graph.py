@@ -387,7 +387,7 @@ class StarGraph():
         shuffled_text = shuffled_text.strip("\n")
         return shuffled_text
 
-    def get_all_latest(self) -> dict[str, str]:
+    def get_all_latest(self) -> dict[str, Relation]:
         """
         Return the entity with the latest relation for every relation.
 
@@ -395,10 +395,20 @@ class StarGraph():
         """
         latest_relations = dict()
         for rel_name, relations in self.relations_map.items():
-            latest = relations.latest().name
+            latest = relations.latest()
             latest_relations[rel_name] = latest
 
         return latest_relations
+
+    def get_all_latest_str(self) -> str:
+        all_latest = self.get_all_latest()
+
+        final_str = ""
+        for key in sorted(all_latest.keys()):
+            final_str += f"Relation {key} with entity named {str(all_latest[key])}\n"
+
+        final_str = final_str.strip("\n")
+        return final_str
 
     def to_dict(self) -> dict:
         """

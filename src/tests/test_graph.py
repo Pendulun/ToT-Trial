@@ -118,8 +118,43 @@ class TestStarGraph(TestCase):
             for rel in rels:
                 graph.add_edge(rel_name, rel)
 
-        expected_latests = {'r1': 'e3', 'r2': 'e4'}
+        expected_latests = {
+            'r1': rel_to_relations['r1'][2],
+            'r2': rel_to_relations['r2'][0]
+        }
         self.assertDictEqual(expected_latests, graph.get_all_latest())
+
+    def test_get_all_latest_str(self):
+        rel_to_relations = {
+            'r1': [
+                Relation(
+                    'e1',
+                    DateInterval(datetime(2000, 5, 6), datetime(2001, 5, 6))),
+                Relation(
+                    'e2',
+                    DateInterval(datetime(2001, 6, 6), datetime(2002, 5, 6))),
+                Relation(
+                    'e3',
+                    DateInterval(datetime(2002, 6, 6), datetime(2003, 5, 6)))
+            ],
+            'r2': [
+                Relation(
+                    'e4',
+                    DateInterval(datetime(2030, 5, 6), datetime(2031, 7, 29))),
+                Relation(
+                    'e5',
+                    DateInterval(datetime(2005, 4, 15), datetime(2009, 3, 2))),
+                Relation(
+                    'e6',
+                    DateInterval(datetime(2022, 3, 19), datetime(2029, 4, 6)))
+            ]
+        }
+        graph = StarGraph()
+        for rel_name, rels in rel_to_relations.items():
+            for rel in rels:
+                graph.add_edge(rel_name, rel)
+        print()
+        print(graph.get_all_latest_str())
 
     def test_get_shuffled_text(self):
         graph = self.get_graph_with_3_relations()
