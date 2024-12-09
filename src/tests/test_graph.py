@@ -5,7 +5,7 @@ from graph import StarGraph, Relation, DateInterval
 
 class TestStarGraph(TestCase):
 
-    def get_graph_with_3_relations(self) -> StarGraph:
+    def get_graph_with_3_relations_single_type(self) -> StarGraph:
         relations_to_add = [
             Relation('e1',
                      DateInterval(datetime(2000, 5, 6), datetime(2001, 5, 6))),
@@ -21,7 +21,7 @@ class TestStarGraph(TestCase):
         return graph
 
     def test_to_list(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         self.assertEqual(3, len(graph.to_list()))
 
     def test_empty_to_list(self):
@@ -29,16 +29,16 @@ class TestStarGraph(TestCase):
         self.assertEqual(0, len(graph.to_list()))
 
     def test_shuffled_list(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         self.assertEqual(3, len(graph.shuffled_list()))
 
     def test_str(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         graph_str = str(graph)
         self.assertEqual(3, len(graph_str.split("\n")))
 
     def test_len(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         self.assertEqual(3, len(graph))
 
     def test_empty_len(self):
@@ -75,7 +75,7 @@ class TestStarGraph(TestCase):
         return target_dict
 
     def test_to_dict(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         expected_dict = self.get_graph_dict()
 
         self.assertDictEqual(expected_dict, graph.to_dict())
@@ -83,7 +83,7 @@ class TestStarGraph(TestCase):
     def test_from_dict(self):
         target_dict = self.get_graph_dict()
 
-        expected_graph = self.get_graph_with_3_relations()
+        expected_graph = self.get_graph_with_3_relations_single_type()
         resuting_graph = StarGraph.from_dict(target_dict)
         self.assertEqual(expected_graph, resuting_graph)
 
@@ -153,15 +153,16 @@ class TestStarGraph(TestCase):
         for rel_name, rels in rel_to_relations.items():
             for rel in rels:
                 graph.add_edge(rel_name, rel)
-        print()
-        print(graph.get_all_latest_str())
+
+        n_relations = len(graph.get_all_latest_str().split("\n"))
+        self.assertEqual(n_relations, 2)
 
     def test_get_shuffled_text(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         self.assertNotEqual(graph.get_shuffled_str(42), str(graph))
 
     def test_get_n_relations(self):
-        graph = self.get_graph_with_3_relations()
+        graph = self.get_graph_with_3_relations_single_type()
         self.assertEqual(3, graph.n_relations())
 
 
