@@ -97,4 +97,7 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
 
         results = self.pipeline(question=questions, context=contexts)
 
-        return list(results)
+        if type(results) == dict:
+            results = [results]
+
+        return results
