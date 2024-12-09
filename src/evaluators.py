@@ -97,4 +97,4 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
 
         results = self.pipeline(question=questions, context=contexts)
 
-        return results
+        return list(results)

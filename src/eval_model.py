@@ -178,7 +178,7 @@ def print_instance(data_path: str,
                 final_answer = target_info[0]
             pairs.append((instance.target_entity, final_answer))
 
-    print(pairs)
+    return pairs
 
 
 def get_total_instances(n_graphs: int, n_instances: int,
@@ -221,5 +221,7 @@ if __name__ == "__main__":
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])
-    print_instance(args.data, llm, args.shuffle, args.n_graphs,
-                   args.n_instances, args.batch_s)
+    pairs = print_instance(args.data, llm, args.shuffle, args.n_graphs,
+                           args.n_instances, args.batch_s)
+
+    print(pairs)
