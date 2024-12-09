@@ -304,7 +304,7 @@ class Relations():
     def __str__(self):
         final_str = ""
         for relation in self._relations:
-            final_str += f"Relation {self._relation_name} with {relation}, "
+            final_str += f"Relation {self._relation_name} with entity named {relation}, "
 
         return final_str.strip(",")
 
