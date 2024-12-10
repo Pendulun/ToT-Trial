@@ -84,6 +84,11 @@ def config_argparser() -> argparse.ArgumentParser:
         default=False,
         required=False,
         help="If it should use the chat pipeline from Hugging Face")
+
+    parser.add_argument("--results_path",
+                        type=str,
+                        required=True,
+                        help="The path to the csv file to save the results")
     return parser
 
 
@@ -119,7 +124,8 @@ def get_eval_pair(data_path: str,
                 yield batch
                 batch = list()
 
-            batch.append(DataInstance(graph_id, rel, entity, text_to_show))
+            batch.append(DataInstance(graph_id, rel, entity.name,
+                                      text_to_show))
             instance_count += 1
 
         if reached_n_instances:
@@ -130,11 +136,12 @@ def get_eval_pair(data_path: str,
 
 
 def run(data_path: str,
-                   llm: LLM,
-                   shuffle: bool = False,
-                   n_graphs: int = -1,
-                   n_instances: int = -1,
-                   batch_s: int = 1):
+        llm: LLM,
+        results_path: str,
+        shuffle: bool = False,
+        n_graphs: int = -1,
+        n_instances: int = -1,
+        batch_s: int = 1):
     assert type(
         batch_s
     ) == int, f"Batch size must be an integer but {type(batch_s)} was given!"
@@ -145,11 +152,15 @@ def run(data_path: str,
     question_fmt = "What is the entity with the latest relation {}?"
     question_fmt += " Answer just with the entity name."
 
-    pairs = list()
-
     dataset_path = pathlib.Path(data_path)
     with open(dataset_path, 'r') as data_file:
         graphs_dicts: list[dict] = json.load(data_file)
+
+    results_path: pathlib.Path = pathlib.Path(results_path)
+    results_path.parent.mkdir(exist_ok=True, parents=True)
+
+    with open(results_path, 'w') as result_file:
+        result_file.write("graph_id,rel_name,expected,predicted\n")
 
     total_instances = get_total_instances(n_graphs, n_instances, graphs_dicts)
 
@@ -160,6 +171,7 @@ def run(data_path: str,
                                     n_instances=total_instances,
                                     batch_s=batch_s),
                       total=n_batches):
+        batch_results = list()
         batch_info = list()
         for instance in batch:
             batch_info.append({
@@ -175,9 +187,15 @@ def run(data_path: str,
             final_answer = ''
             if len(target_info) > 0:
                 final_answer = target_info[0]
-            pairs.append((instance.target_entity, final_answer))
+            batch_results.append((instance.graph_id, instance.relation_name,
+                                  instance.target_entity, final_answer))
 
-    return pairs
+        with open(results_path, 'a') as result_file:
+            lines = [
+                ",".join([str(el) for el in result]) + "\n"
+                for result in batch_results
+            ]
+            result_file.writelines(lines)
 
 
 def get_total_instances(n_graphs: int, n_instances: int,
@@ -218,5 +236,5 @@ if __name__ == "__main__":
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])
-    pairs = run(args.data, llm, args.shuffle, args.n_graphs,
-                           args.n_instances, args.batch_s)
+    pairs = run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
+                args.n_instances, args.batch_s)
