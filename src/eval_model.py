@@ -170,7 +170,8 @@ def run(data_path: str,
                                     shuffle,
                                     n_instances=total_instances,
                                     batch_s=batch_s),
-                      total=n_batches):
+                      total=n_batches,
+                      desc="Batches"):
         batch_results = list()
         batch_info = list()
         for instance in batch:
