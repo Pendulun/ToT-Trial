@@ -135,7 +135,6 @@ def run(data_path: str,
                    n_graphs: int = -1,
                    n_instances: int = -1,
                    batch_s: int = 1):
-    print("Batch size:", batch_s)
     assert type(
         batch_s
     ) == int, f"Batch size must be an integer but {type(batch_s)} was given!"
@@ -215,13 +214,9 @@ if __name__ == "__main__":
     else:
         model_type = 'local'
 
-    print("Model type:", model_type)
-
     type_to_model = {'qa': HuggingFaceQuestionAnsweringLLM, 'local': URLLLM}
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])
     pairs = run(args.data, llm, args.shuffle, args.n_graphs,
                            args.n_instances, args.batch_s)
-
-    print(pairs)
