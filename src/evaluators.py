@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from openai import OpenAI, OpenAIError
 from transformers import pipeline
 
+from utils import timer_dec
 
-class LLM():
+
+class LLM(ABC):
     """
     This is a LLM wrapper. It receives the model name and defines a function for it to answer the query
     """
@@ -35,6 +37,7 @@ class URLLLM(LLM):
             base_url=url,
         )
 
+    @timer_dec
     def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
         """
         Data is a list of dict of instances. For this LLM, each dict must have 'question'
@@ -85,6 +88,7 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
                                  model=self.model_name,
                                  device=device)
 
+    @timer_dec
     def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
         """
         Data is a list of dict of instances. For this LLM, each dict must have 'question'
