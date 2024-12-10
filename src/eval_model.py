@@ -264,7 +264,7 @@ def get_total_instances(n_graphs: int, n_instances: int,
             break
 
         graph = StarGraph.from_dict(graph_dict)
-        graph_instances = graph.n_relations()
+        graph_instances = graph.n_relation_types()
         if n_instances < 0:
             tot_instances += graph_instances
         elif tot_instances + graph_instances < n_instances:

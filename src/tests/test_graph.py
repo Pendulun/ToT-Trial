@@ -142,8 +142,8 @@ class TestStarGraph(TestCase):
         self.assertNotEqual(graph.get_shuffled_str(42), str(graph))
 
     def test_get_n_relations(self):
-        graph = self.get_graph_with_3_relations_single_type()
-        self.assertEqual(3, graph.n_relations())
+        graph = self._get_graph_with_relations_of_2_types()
+        self.assertEqual(6, graph.n_relations())
 
 
 if __name__ == "__main__":
