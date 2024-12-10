@@ -86,7 +86,7 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
         super().__init__(model_name, **kwargs)
         self.pipeline = pipeline("question-answering",
                                  model=self.model_name,
-                                 device=device)
+                                 device=device, **kwargs)
 
     @timer_dec
     def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
