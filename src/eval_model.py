@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from evaluators import LLM, URLLLM, HuggingFaceQuestionAnsweringLLM
 from graph import StarGraph
+import utils
 
 DataInstance = namedtuple(
     "DataInstance",
@@ -52,6 +53,13 @@ def config_argparser() -> argparse.ArgumentParser:
                         default=1,
                         help="The batch size. It might not be used")
 
+    parser.add_argument("--starting_batch",
+                        type=int,
+                        required=False,
+                        default=0,
+                        help="The batch id from where to start evaluating. "\
+                            " Usefull to continue running after a halt. Default: 0")
+
     parser.add_argument(
         "--url",
         type=str,
@@ -89,6 +97,18 @@ def config_argparser() -> argparse.ArgumentParser:
                         type=str,
                         required=True,
                         help="The path to the csv file to save the results")
+
+    parser.add_argument("--print-times",
+                        action="store_true",
+                        required=False,
+                        default=False,
+                        help="If it should print times.")
+
+    parser.add_argument("--no-progress",
+                        action="store_true",
+                        required=False,
+                        default=False,
+                        help="If it should not show the progress bar")
     return parser
 
 
@@ -141,7 +161,9 @@ def run(data_path: str,
         shuffle: bool = False,
         n_graphs: int = -1,
         n_instances: int = -1,
-        batch_s: int = 1):
+        batch_s: int = 1,
+        starting_batch: int = 0,
+        no_progress_bar: bool = False):
     assert type(
         batch_s
     ) == int, f"Batch size must be an integer but {type(batch_s)} was given!"
@@ -166,37 +188,68 @@ def run(data_path: str,
 
     n_batches = int(math.ceil(total_instances / batch_s))
 
-    for batch in tqdm(get_eval_pair(data_path,
-                                    shuffle,
-                                    n_instances=total_instances,
-                                    batch_s=batch_s),
-                      total=n_batches,
-                      desc="Batches"):
-        batch_results = list()
-        batch_info = list()
-        for instance in batch:
-            batch_info.append({
-                'context':
-                context_fmt.format(instance.relations),
-                'question':
-                question_fmt.format(instance.relation_name)
-            })
+    for batch_id, batch in enumerate(
+            tqdm(get_eval_pair(data_path,
+                               shuffle,
+                               n_instances=total_instances,
+                               batch_s=batch_s),
+                 total=n_batches,
+                 desc="Batches",
+                 disable=no_progress_bar)):
+        if batch_id < starting_batch:
+            continue
 
-        responses = llm.answer(batch_info, max_tokens=LLM_answer_max_tokens)
-        for instance, response in zip(batch, responses):
-            target_info = re.findall("e[0-9]+", response['answer'])
-            final_answer = ''
-            if len(target_info) > 0:
-                final_answer = target_info[0]
-            batch_results.append((instance.graph_id, instance.relation_name,
-                                  instance.target_entity, final_answer))
+        batch_results = proccess_batch(llm, context_fmt, question_fmt, batch)
+        save_results_to(batch_results, results_path)
 
-        with open(results_path, 'a') as result_file:
-            lines = [
-                ",".join([str(el) for el in result]) + "\n"
-                for result in batch_results
-            ]
-            result_file.writelines(lines)
+
+@utils.timer_dec
+def proccess_batch(
+        llm: LLM, context_fmt: str, question_fmt: str,
+        batch: list[DataInstance]) -> list[tuple[int, str, str, str]]:
+    """
+    Proccess the batch of data using the provided llm.
+    Return a list of responses
+    """
+    batch_info = list()
+    for instance in batch:
+        batch_info.append({
+            'context':
+            context_fmt.format(instance.relations),
+            'question':
+            question_fmt.format(instance.relation_name)
+        })
+
+    responses = llm.answer(batch_info, max_tokens=LLM_answer_max_tokens)
+
+    batch_results = post_process_answers(batch, responses)
+    return batch_results
+
+
+@utils.timer_dec
+def save_results_to(batch_results: list[tuple[int, str, str, str]],
+                    results_path: pathlib.Path):
+    with open(results_path, 'a') as result_file:
+        lines = [
+            ",".join([str(el) for el in result]) + "\n"
+            for result in batch_results
+        ]
+        result_file.writelines(lines)
+
+
+@utils.timer_dec
+def post_process_answers(
+        batch: list[DataInstance],
+        llm_responses: list[dict]) -> list[tuple[int, str, str, str]]:
+    batch_results = list()
+    for instance, response in zip(batch, llm_responses):
+        target_info = re.findall("e[0-9]+", response['answer'])
+        final_answer = ''
+        if len(target_info) > 0:
+            final_answer = target_info[0]
+        batch_results.append((instance.graph_id, instance.relation_name,
+                              instance.target_entity, final_answer))
+    return batch_results
 
 
 def get_total_instances(n_graphs: int, n_instances: int,
@@ -237,5 +290,10 @@ if __name__ == "__main__":
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])
+
+    if not args.print_times:
+        utils.PRINT_ENABLED = False
+
     pairs = run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
-                args.n_instances, args.batch_s)
+                args.n_instances, args.batch_s, args.starting_batch,
+                args.no_progress)
