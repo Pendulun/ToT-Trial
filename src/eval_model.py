@@ -181,8 +181,9 @@ def run(data_path: str,
     results_path: pathlib.Path = pathlib.Path(results_path)
     results_path.parent.mkdir(exist_ok=True, parents=True)
 
-    with open(results_path, 'w') as result_file:
-        result_file.write("graph_id,rel_name,expected,predicted\n")
+    if starting_batch == 0:
+        with open(results_path, 'w') as result_file:
+            result_file.write("graph_id,rel_name,expected,predicted\n")
 
     total_instances = get_total_instances(n_graphs, n_instances, graphs_dicts)
 
@@ -294,6 +295,5 @@ if __name__ == "__main__":
     if not args.print_times:
         utils.PRINT_ENABLED = False
 
-    pairs = run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
-                args.n_instances, args.batch_s, args.starting_batch,
-                args.no_progress)
+    run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
+        args.n_instances, args.batch_s, args.starting_batch, args.no_progress)
