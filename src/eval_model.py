@@ -129,7 +129,7 @@ def get_eval_pair(data_path: str,
         yield batch
 
 
-def print_instance(data_path: str,
+def run(data_path: str,
                    llm: LLM,
                    shuffle: bool = False,
                    n_graphs: int = -1,
@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])
-    pairs = print_instance(args.data, llm, args.shuffle, args.n_graphs,
+    pairs = run(args.data, llm, args.shuffle, args.n_graphs,
                            args.n_instances, args.batch_s)
 
     print(pairs)
