@@ -112,7 +112,7 @@ class HuggingFaceChatLLM(LLM):
 
     def __init__(self, model_name="", device='cpu', **kwargs):
         super().__init__(model_name, **kwargs)
-        self.pipeline = pipeline("text2text-generation",
+        self.pipeline = pipeline("text-generation",
                                  model=self.model_name,
                                  device=device,
                                  **kwargs)
