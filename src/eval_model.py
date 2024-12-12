@@ -9,7 +9,7 @@ import re
 from dotenv import dotenv_values
 from tqdm import tqdm
 
-from evaluators import LLM, URLLLM, HuggingFaceQuestionAnsweringLLM
+from evaluators import LLM, URLLLM, HuggingFaceQuestionAnsweringLLM, HuggingFaceChatLLM
 from graph import StarGraph
 import utils
 
@@ -287,7 +287,11 @@ if __name__ == "__main__":
     else:
         model_type = 'local'
 
-    type_to_model = {'qa': HuggingFaceQuestionAnsweringLLM, 'local': URLLLM}
+    type_to_model = {
+        'qa': HuggingFaceQuestionAnsweringLLM,
+        'local': URLLLM,
+        'chat': HuggingFaceChatLLM
+    }
 
     llm = type_to_model[model_type](args.model_name, args.url,
                                     secrets['API_KEY'])

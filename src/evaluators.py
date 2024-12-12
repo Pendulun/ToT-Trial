@@ -13,6 +13,8 @@ class LLM(ABC):
     """
 
     def __init__(self, model_name: str = "", **kwargs):
+        if model_name.strip() == "":
+            model_name = None
         self.model_name = model_name
 
     @abstractmethod
@@ -81,12 +83,11 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
     """
 
     def __init__(self, model_name: str, device='cpu', **kwargs):
-        if model_name.strip() == "":
-            model_name = None
         super().__init__(model_name, **kwargs)
         self.pipeline = pipeline("question-answering",
                                  model=self.model_name,
-                                 device=device, **kwargs)
+                                 device=device,
+                                 **kwargs)
 
     @timer_dec
     def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
@@ -105,3 +106,34 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
             results = [results]
 
         return results
+
+
+class HuggingFaceChatLLM(LLM):
+
+    def __init__(self, model_name="", device='cpu', **kwargs):
+        super().__init__(model_name, **kwargs)
+        self.pipeline = pipeline("text2text-generation",
+                                 model=self.model_name,
+                                 device=device,
+                                 **kwargs)
+
+    def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
+        """
+        Data is a list of dict of instances. For this LLM, each dict must have 'question'
+        and 'context' keys. This allows for batched processing
+
+        Return a list of dicts of answers. Each dict has a 'answer' key.
+        """
+        questions = [item["question"] for item in data]
+        contexts = [item["context"] for item in data]
+
+        responses = []
+        for context, question in zip(contexts, questions):
+            prompt = f"Context: {context}\nUser: {question}\nAssistent:"
+            response = self.pipeline(prompt, **kwargs)
+            responses.append({
+                "answer":
+                response[0]["generated_text"].split('Assistent:')[-1].strip()
+            })
+
+        return responses
