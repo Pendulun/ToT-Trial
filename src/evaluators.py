@@ -124,6 +124,10 @@ class HuggingFaceChatLLM(LLM):
 
         Return a list of dicts of answers. Each dict has a 'answer' key.
         """
+        if 'max_tokens' in kwargs:
+            kwargs['max_new_tokens'] = kwargs['max_tokens']
+            del kwargs['max_tokens']
+
         questions = [item["question"] for item in data]
         contexts = [item["context"] for item in data]
 
