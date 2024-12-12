@@ -134,7 +134,10 @@ class HuggingFaceChatLLM(LLM):
         responses = []
         for context, question in zip(contexts, questions):
             prompt = f"Context: {context}\nUser: {question}\nAssistent:"
-            response = self.pipeline(prompt, **kwargs)
+            response = self.pipeline(
+                prompt,
+                pad_token_id=self.pipeline.tokenizer.eos_token_id,
+                **kwargs)
             responses.append({
                 "answer":
                 response[0]["generated_text"].split('Assistent:')[-1].strip()
