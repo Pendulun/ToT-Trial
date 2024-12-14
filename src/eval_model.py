@@ -262,7 +262,7 @@ def post_process_answers(
         apply_regex: bool = True) -> list[tuple[int, str, str, str]]:
     batch_results = list()
     for instance, response in zip(batch, llm_responses):
-        final_answer = response['answer']
+        final_answer = response['answer'].split("\n")[0]
         if apply_regex:
             target_info = re.findall("e[0-9]+", response['answer'])
             final_answer = target_info[0] if len(target_info) > 0 else ''
