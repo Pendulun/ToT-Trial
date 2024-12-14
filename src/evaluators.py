@@ -128,19 +128,21 @@ class HuggingFaceChatLLM(LLM):
             kwargs['max_new_tokens'] = kwargs['max_tokens']
             del kwargs['max_tokens']
 
-        questions = [item["question"] for item in data]
-        contexts = [item["context"] for item in data]
+        prompt_fmt = "Context: {}\nUser: {}\nAssistent:"
+        prompts = [
+            prompt_fmt.format(item["context"], item["question"])
+            for item in data
+        ]
+        outputs = self.pipeline(
+            prompts,
+            pad_token_id=self.pipeline.tokenizer.eos_token_id,
+            **kwargs)
 
-        responses = []
-        for context, question in zip(contexts, questions):
-            prompt = f"Context: {context}\nUser: {question}\nAssistent:"
-            response = self.pipeline(
-                prompt,
-                pad_token_id=self.pipeline.tokenizer.eos_token_id,
-                **kwargs)
+        responses = list()
+        for output in outputs:
             responses.append({
                 "answer":
-                response[0]["generated_text"].split('Assistent:')[-1].strip()
+                output[0]["generated_text"].split('Assistent:')[-1].strip()
             })
 
         return responses
