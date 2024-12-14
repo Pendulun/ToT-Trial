@@ -109,6 +109,15 @@ def config_argparser() -> argparse.ArgumentParser:
                         required=False,
                         default=False,
                         help="If it should not show the progress bar")
+
+    parser.add_argument(
+        "--apply_regex",
+        action="store_true",
+        default=False,
+        help=
+        "If it should apply regex to filter out the entity of the llm response."\
+            " If not used, will save the original responseI"
+    )
     return parser
 
 
@@ -163,7 +172,8 @@ def run(data_path: str,
         n_instances: int = -1,
         batch_s: int = 1,
         starting_batch: int = 0,
-        no_progress_bar: bool = False):
+        no_progress_bar: bool = False,
+        apply_regex: bool = True):
     assert type(
         batch_s
     ) == int, f"Batch size must be an integer but {type(batch_s)} was given!"
@@ -200,14 +210,21 @@ def run(data_path: str,
         if batch_id < starting_batch:
             continue
 
-        batch_results = proccess_batch(llm, context_fmt, question_fmt, batch)
+        batch_results = proccess_batch(llm,
+                                       context_fmt,
+                                       question_fmt,
+                                       batch,
+                                       apply_regex=apply_regex)
         save_results_to(batch_results, results_path)
 
 
 @utils.timer_dec
 def proccess_batch(
-        llm: LLM, context_fmt: str, question_fmt: str,
-        batch: list[DataInstance]) -> list[tuple[int, str, str, str]]:
+        llm: LLM,
+        context_fmt: str,
+        question_fmt: str,
+        batch: list[DataInstance],
+        apply_regex: bool = True) -> list[tuple[int, str, str, str]]:
     """
     Proccess the batch of data using the provided llm.
     Return a list of responses
@@ -223,7 +240,7 @@ def proccess_batch(
 
     responses = llm.answer(batch_info, max_tokens=LLM_answer_max_tokens)
 
-    batch_results = post_process_answers(batch, responses)
+    batch_results = post_process_answers(batch, responses, apply_regex)
     return batch_results
 
 
@@ -241,13 +258,14 @@ def save_results_to(batch_results: list[tuple[int, str, str, str]],
 @utils.timer_dec
 def post_process_answers(
         batch: list[DataInstance],
-        llm_responses: list[dict]) -> list[tuple[int, str, str, str]]:
+        llm_responses: list[dict],
+        apply_regex: bool = True) -> list[tuple[int, str, str, str]]:
     batch_results = list()
     for instance, response in zip(batch, llm_responses):
-        target_info = re.findall("e[0-9]+", response['answer'])
-        final_answer = ''
-        if len(target_info) > 0:
-            final_answer = target_info[0]
+        final_answer = response
+        if apply_regex:
+            target_info = re.findall("e[0-9]+", response['answer'])
+            final_answer = target_info[0] if len(target_info) > 0 else ''
         batch_results.append((instance.graph_id, instance.relation_name,
                               instance.target_entity, final_answer))
     return batch_results
@@ -300,4 +318,5 @@ if __name__ == "__main__":
         utils.PRINT_ENABLED = False
 
     run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
-        args.n_instances, args.batch_s, args.starting_batch, args.no_progress)
+        args.n_instances, args.batch_s, args.starting_batch, args.no_progress,
+        args.apply_regex)
