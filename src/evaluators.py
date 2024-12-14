@@ -136,6 +136,7 @@ class HuggingFaceChatLLM(LLM):
         outputs = self.pipeline(
             prompts,
             pad_token_id=self.pipeline.tokenizer.eos_token_id,
+            temperature=0.1, #Low temperature to keep things simple
             **kwargs)
 
         responses = list()
