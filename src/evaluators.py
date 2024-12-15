@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 
 from openai import OpenAI, OpenAIError
-from transformers import pipeline
+from transformers import pipeline, StoppingCriteria, StoppingCriteriaList
 
 from utils import timer_dec
 
@@ -108,6 +108,23 @@ class HuggingFaceQuestionAnsweringLLM(LLM):
         return results
 
 
+class StopOnPeriod(StoppingCriteria):
+    """
+    Used in the HuggingFaceChatLLM to stop generating text after generating
+    a period (.).
+    """
+
+    def __init__(self, tokenizer):
+        super().__init__()
+        self.tokenizer = tokenizer
+
+    def __call__(self, input_ids, scores, **kwargs):
+        last_token_id = input_ids[0, -1].item()
+        decoded_text = self.tokenizer.decode([last_token_id],
+                                             skip_special_tokens=True)
+        return decoded_text.endswith(".")
+
+
 class HuggingFaceChatLLM(LLM):
 
     def __init__(self, model_name="", device='cpu', **kwargs):
@@ -116,6 +133,9 @@ class HuggingFaceChatLLM(LLM):
                                  model=self.model_name,
                                  device=device,
                                  **kwargs)
+
+        self.stopping_criteria = StoppingCriteriaList(
+            [StopOnPeriod(tokenizer=self.pipeline.tokenizer)])
 
     def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
         """
@@ -136,7 +156,8 @@ class HuggingFaceChatLLM(LLM):
         outputs = self.pipeline(
             prompts,
             pad_token_id=self.pipeline.tokenizer.eos_token_id,
-            temperature=0.1, #Low temperature to keep things simple
+            temperature=0.1,  #Low temperature to keep things simple
+            stopping_criteria=self.stopping_criteria,
             **kwargs)
 
         responses = list()
