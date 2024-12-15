@@ -279,8 +279,7 @@ class Relations():
         self_dict['rel_name'] = self._relation_name
 
         self_dict['relations'] = [
-            relation.to_dict()
-            for relation in sorted(self._relations, reverse=True)
+            relation.to_dict() for relation in self.sorted(ascending=False)
         ]
         return self_dict
 
@@ -301,6 +300,9 @@ class Relations():
             if rel == relation:
                 return True
         return False
+
+    def sorted(self, ascending: bool = True) -> list[Relation]:
+        return sorted(self._relations, reverse=not ascending)
 
     def __str__(self):
         final_str = ""

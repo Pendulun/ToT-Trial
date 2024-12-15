@@ -149,6 +149,24 @@ class TestStarGraph(TestCase):
         graph = self._get_graph_with_relations_of_2_types()
         self.assertEqual(6, len(graph.get_interleaved_list()))
 
+    def test_sorted_ascending(self):
+        graph = self._get_graph_with_relations_of_2_types()
+        for relations in graph.relations_map.values():
+            sorted_rels = relations.sorted()
+            #Check if every relation comes before the next one
+            for idx, rel in enumerate(sorted_rels):
+                if idx < len(sorted_rels) - 1:
+                    self.assertTrue(rel <= sorted_rels[idx + 1])
+
+    def test_sorted_descending(self):
+        graph = self._get_graph_with_relations_of_2_types()
+        for relations in graph.relations_map.values():
+            sorted_rels = relations.sorted(ascending=False)
+            #Check if every relation comes after the next one
+            for idx, rel in enumerate(sorted_rels):
+                if idx < len(sorted_rels) - 1:
+                    self.assertTrue(rel >= sorted_rels[idx + 1])
+
 
 if __name__ == "__main__":
     main()
