@@ -34,6 +34,25 @@ def config_argparser() -> argparse.ArgumentParser:
                         default=False,
                         help="If the context should be shuffled")
 
+    parser.add_argument("--interleave_asc",
+                        action="store_true",
+                        required=False,
+                        help="If it should interleave the relations from every relation type "\
+                            "on ascending order")
+
+    parser.add_argument("--interleave_desc",
+                        action="store_true",
+                        required=False,
+                        help="If it should interleave the relations from every relation type "\
+                            "on descending order")
+
+    parser.add_argument(
+        "--latest",
+        action="store_true",
+        required=False,
+        help=
+        "If it should show only the last relations from every relation type")
+
     parser.add_argument("--n_graphs",
                         type=int,
                         required=False,
@@ -122,7 +141,7 @@ def config_argparser() -> argparse.ArgumentParser:
 
 
 def get_eval_pair(data_path: str,
-                  shuffle: bool = False,
+                  relations_order: str = 'as_is',
                   n_instances: int = -1,
                   batch_s: int = 1) -> Generator[list[DataInstance]]:
     """
@@ -142,7 +161,7 @@ def get_eval_pair(data_path: str,
     for graph_id, graph_dict in enumerate(graphs_dicts):
         graph = StarGraph.from_dict(graph_dict)
 
-        text_to_show = graph.get_shuffled_str() if shuffle else str(graph)
+        text_to_show = _get_text_to_show(relations_order, graph)
 
         for rel, entity in graph.get_all_latest().items():
             if instance_count == n_instances:
@@ -164,10 +183,29 @@ def get_eval_pair(data_path: str,
         yield batch
 
 
+def _get_text_to_show(relations_order: str, graph: StarGraph):
+    if relations_order == 'shuffle':
+        return graph.get_shuffled_str()
+
+    if relations_order == 'interleave_asc':
+        return graph.get_interleaved_str(True)
+
+    if relations_order == 'interleave_desc':
+        return graph.get_interleaved_str(False)
+
+    if relations_order == "latest":
+        return graph.get_all_latest_str()
+
+    if relations_order == 'as_is':
+        return str(graph)
+
+    raise ValueError(relations_order, "is not a valid value!")
+
+
 def run(data_path: str,
         llm: LLM,
         results_path: str,
-        shuffle: bool = False,
+        relations_order: str = 'as_is',
         n_graphs: int = -1,
         n_instances: int = -1,
         batch_s: int = 1,
@@ -201,7 +239,7 @@ def run(data_path: str,
 
     for batch_id, batch in enumerate(
             tqdm(get_eval_pair(data_path,
-                               shuffle,
+                               relations_order,
                                n_instances=total_instances,
                                batch_s=batch_s),
                  total=n_batches,
@@ -317,6 +355,18 @@ if __name__ == "__main__":
     if not args.print_times:
         utils.PRINT_ENABLED = False
 
-    run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
+    relations_order = None
+    if args.shuffle:
+        relations_order = 'shuffle'
+    elif args.interleave_asc:
+        relations_order = 'interleave_asc'
+    elif args.interleave_desc:
+        relations_order = 'interleave_desc'
+    elif args.latest:
+        relations_order = 'latest'
+    else:
+        relations_order = 'as_is'
+
+    run(args.data, llm, args.results_path, relations_order, args.n_graphs,
         args.n_instances, args.batch_s, args.starting_batch, args.no_progress,
         args.apply_regex)
