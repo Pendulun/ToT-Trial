@@ -390,12 +390,24 @@ class StarGraph():
         shuffled_text = shuffled_text.strip("\n")
         return shuffled_text
 
-    def get_interleaved_list(self) -> list[str]:
+    def get_interleaved_list(self, ascending: bool = True) -> list[str]:
+        """
+        Returns a list containing interleaved relations from every relation type.
+        The order per relation type is defined by the ascending flag.
+        
+        Example:
+        r1 = [('e1', '2020'), ('e2', 2015)]
+        r2 = [('e3', '2021'), ('e4', '2022')]
+        if asceding == True:
+            return [('e2', '2015'), ('e3', '2021'), ('e1', '2020'), ('e4', '2022')]
+        if asceding == False:
+            return [('e1', '2020'), ('e4', '2022'), ('e2', '2015'), ('e3', '2021')]
+        """
         queues: list[Queue] = list()
         for key in sorted(self.relations_map.keys()):
             q = Queue(maxsize=0)  #Infinite queue
             relations = self.relations_map[key]
-            for relation in relations:
+            for relation in relations.sorted(ascending):
                 q.put((key, relation))
             queues.append(q)
 
