@@ -149,6 +149,11 @@ class TestStarGraph(TestCase):
         graph = self._get_graph_with_relations_of_2_types()
         self.assertEqual(6, len(graph.get_interleaved_list()))
 
+    def test_get_interleaved_str(self):
+        graph = self._get_graph_with_relations_of_2_types()
+        n_relations = len(graph.get_interleaved_str().split("\n"))
+        self.assertEqual(n_relations, 6)
+
     def test_sorted_ascending(self):
         graph = self._get_graph_with_relations_of_2_types()
         for relations in graph.relations_map.values():

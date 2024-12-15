@@ -427,6 +427,13 @@ class StarGraph():
             for rel_name, rel in interleaved_relations
         ]
 
+    def get_interleaved_str(self, ascending: bool = True):
+        interleaved_text = ""
+        for text in self.get_interleaved_list(ascending):
+            interleaved_text += text + "\n"
+        interleaved_text = interleaved_text.strip("\n")
+        return interleaved_text
+
     def get_all_latest(self) -> dict[str, Relation]:
         """
         Return the entity with the latest relation for every relation.
