@@ -147,9 +147,7 @@ class TestStarGraph(TestCase):
 
     def test_get_interleaved_list(self):
         graph = self._get_graph_with_relations_of_2_types()
-        interleaved_list = graph.get_interleaved_list()
-        print(interleaved_list)
-        self.assertEqual(6, len(interleaved_list))
+        self.assertEqual(6, len(graph.get_interleaved_list()))
 
 
 if __name__ == "__main__":

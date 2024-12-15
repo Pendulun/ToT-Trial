@@ -191,7 +191,7 @@ class Relations():
 
     def __init__(self, relation_name):
         self._relation_name = relation_name
-        self._relations: set[Relation] = set()
+        self._relations: list[Relation] = list()
 
     def __len__(self):
         return len(self._relations)
@@ -232,7 +232,7 @@ class Relations():
                                     DateInterval.get_random(years, seed))
 
             if self._dont_overlap_with_any_relation(new_relation):
-                self._relations.add(new_relation)
+                self._relations.append(new_relation)
                 return new_relation
 
         return None
@@ -252,7 +252,7 @@ class Relations():
         Returns if the relation was added or not
         """
         if self._dont_overlap_with_any_relation(relation):
-            self._relations.add(relation)
+            self._relations.append(relation)
             return True
 
         return False
