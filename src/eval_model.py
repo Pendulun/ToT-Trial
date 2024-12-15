@@ -166,6 +166,7 @@ def get_eval_pair(data_path: str,
 
 def run(data_path: str,
         llm: LLM,
+        model_type: str,
         results_path: str,
         shuffle: bool = False,
         n_graphs: int = -1,
@@ -181,8 +182,16 @@ def run(data_path: str,
 
     context_fmt = "The following is a set of temporal facts."
     context_fmt += " All dates are in the format year-month-day. Facts:\n{}"
-    question_fmt = "What is the entity with the latest relation {}?"
-    question_fmt += " Answer just with the entity name."
+
+    type_to_question = {
+        "qa":
+        "What is the entity with the latest relation {}? Answer just with the entity name.",
+        "chat":
+        "The entity with the latest relation {} is ",
+        "local":
+        "What is the entity with the latest relation {}? Answer just with the entity name."
+    }
+    question_fmt = type_to_question[model_type]
 
     dataset_path = pathlib.Path(data_path)
     with open(dataset_path, 'r') as data_file:
@@ -317,6 +326,6 @@ if __name__ == "__main__":
     if not args.print_times:
         utils.PRINT_ENABLED = False
 
-    run(args.data, llm, args.results_path, args.shuffle, args.n_graphs,
-        args.n_instances, args.batch_s, args.starting_batch, args.no_progress,
-        args.apply_regex)
+    run(args.data, llm, model_type, args.results_path, args.shuffle,
+        args.n_graphs, args.n_instances, args.batch_s, args.starting_batch,
+        args.no_progress, args.apply_regex)
