@@ -417,8 +417,6 @@ class StarGraph():
             for queue in queues:
                 if not queue.empty():
                     interleaved_relations.append(queue.get_nowait())
-                    if queue.empty():
-                        n_empty_queues += 1
                 else:
                     n_empty_queues += 1
             if n_empty_queues == len(queues):
