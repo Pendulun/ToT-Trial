@@ -1,6 +1,7 @@
-import random
-import datetime
 import calendar
+import datetime
+from queue import Queue
+import random
 
 
 class DateInterval():
@@ -386,6 +387,33 @@ class StarGraph():
             shuffled_text += text + "\n"
         shuffled_text = shuffled_text.strip("\n")
         return shuffled_text
+
+    def get_interleaved_list(self) -> list[str]:
+        queues: list[Queue] = list()
+        for key in sorted(self.relations_map.keys()):
+            q = Queue(maxsize=0)  #Infinite queue
+            relations = self.relations_map[key]
+            for relation in relations:
+                q.put((key, relation))
+            queues.append(q)
+
+        interleaved_relations = list()
+        while True:
+            n_empty_queues = 0
+            for queue in queues:
+                if not queue.empty():
+                    interleaved_relations.append(queue.get_nowait())
+                    if queue.empty():
+                        n_empty_queues += 1
+                else:
+                    n_empty_queues += 1
+            if n_empty_queues == len(queues):
+                break
+
+        return [
+            f"Relation {rel_name} with entity named {str(rel)}"
+            for rel_name, rel in interleaved_relations
+        ]
 
     def get_all_latest(self) -> dict[str, Relation]:
         """
