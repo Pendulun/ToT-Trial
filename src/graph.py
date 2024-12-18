@@ -457,6 +457,17 @@ class StarGraph():
         final_str = final_str.strip("\n")
         return final_str
 
+    def n_nodes_for_relation(self, rel_name: str) -> int:
+        """
+        Returns the number of relations with the
+        rel_name. If it doesn't exists in the graph,
+        returns 0.
+        """
+        if rel_name in self.relations_map:
+            return len(self.relations_map[rel_name])
+
+        return 0
+
     def to_dict(self) -> dict:
         """
         Returns a dict of this Graph following:

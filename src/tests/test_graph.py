@@ -172,6 +172,14 @@ class TestStarGraph(TestCase):
                 if idx < len(sorted_rels) - 1:
                     self.assertTrue(rel >= sorted_rels[idx + 1])
 
+    def test_can_get_n_relations_for_relation(self):
+        graph = self._get_graph_with_relations_of_2_types()
+        self.assertEqual(graph.n_nodes_for_relation('r1'), 3)
+
+    def test_get_0_for_non_existent_relation(self):
+        graph = self._get_graph_with_relations_of_2_types()
+        self.assertEqual(graph.n_nodes_for_relation('j9'), 0)
+
 
 if __name__ == "__main__":
     main()
