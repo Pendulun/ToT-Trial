@@ -189,8 +189,8 @@ class HuggingFaceNLIModel(LLM):
 
         Return a list of dicts of answers. Each dict has a 'answer' and 'score' keys.
         """
-        premises = [item["question"] for item in data]
-        hypotheses = [item["context"] for item in data]
+        premises = [item["context"] for item in data]
+        hypotheses = [item["question"] for item in data]
 
         inputs = [{
             'text': premise,
