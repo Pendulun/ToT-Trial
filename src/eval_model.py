@@ -220,16 +220,12 @@ def run(data_path: str,
         batch_s: int = 1,
         starting_batch: int = 0,
         no_progress_bar: bool = False,
-        apply_regex: bool = True):
+        apply_regex: bool = True,
+        is_nli: bool = False):
     assert type(
         batch_s
     ) == int, f"Batch size must be an integer but {type(batch_s)} was given!"
     assert batch_s > 0, f"Batch size must be positive but {batch_s} was given!"
-
-    context_fmt = "The following is a set of temporal facts."
-    context_fmt += " All dates are in the format year-month-day. Facts:\n{}"
-    question_fmt = "What is the entity with the latest relation {}?"
-    question_fmt += " Answer just with the entity name."
 
     dataset_path = pathlib.Path(data_path)
     with open(dataset_path, 'r') as data_file:
@@ -246,7 +242,17 @@ def run(data_path: str,
 
     n_batches = int(math.ceil(total_instances / batch_s))
 
-    for batch_id, batch in enumerate(
+    context_fmt = "The following is a set of temporal facts."
+    context_fmt += " All dates are in the format year-month-day. Facts:\n{}"
+
+    questions_fmt_func = {
+        'nli': _nli_question_formater,
+        'other': _other_question_formater
+    }
+    question_fmt_func = questions_fmt_func[
+        'nli'] if is_nli else questions_fmt_func['other']
+
+    for batch_id, batch_data in enumerate(
             tqdm(get_eval_pair(data_path,
                                relations_order,
                                n_instances=total_instances,
@@ -257,38 +263,51 @@ def run(data_path: str,
         if batch_id < starting_batch:
             continue
 
-        batch_results = proccess_batch(llm,
-                                       context_fmt,
-                                       question_fmt,
-                                       batch,
-                                       apply_regex=apply_regex)
+        batch_entries = _transform_batch_to_inputs(context_fmt,
+                                                   question_fmt_func,
+                                                   batch_data)
+
+        responses = proccess_batch(llm, batch_entries)
+
+        batch_results = post_process_responses(batch_data, responses,
+                                               apply_regex)
+
         save_results_to(batch_results, results_path)
 
 
+def _nli_question_formater(instance: DataInstance) -> list[str]:
+    question_fmt = "Entity {} has the latest relation {}."
+    question = question_fmt.format(instance.target_entity,
+                                   instance.relation_name)
+    return question
+
+
+def _other_question_formater(instance: DataInstance) -> list[str]:
+    question_fmt = "What is the entity with the latest relation {}?"
+    question_fmt += " Answer just with the entity name."
+    question = question_fmt.format(instance.relation_name)
+    return question
+
+
 @utils.timer_dec
-def proccess_batch(
-        llm: LLM,
-        context_fmt: str,
-        question_fmt: str,
-        batch: list[DataInstance],
-        apply_regex: bool = True) -> list[tuple[int, str, str, str]]:
+def _transform_batch_to_inputs(
+        context_fmt: str, question_fmt_func,
+        batch_data: list[DataInstance]) -> list[dict[str, str]]:
+    batch_entries = [{
+        'context': context_fmt.format(instance.relations),
+        'question': question_fmt_func(instance)
+    } for instance in batch_data]
+
+    return batch_entries
+
+
+@utils.timer_dec
+def proccess_batch(llm: LLM, batch_entries: list[dict]) -> list[dict]:
     """
     Proccess the batch of data using the provided llm.
-    Return a list of responses
+    Return a list of LLM responses
     """
-    batch_info = list()
-    for instance in batch:
-        batch_info.append({
-            'context':
-            context_fmt.format(instance.relations),
-            'question':
-            question_fmt.format(instance.relation_name)
-        })
-
-    responses = llm.answer(batch_info, max_tokens=LLM_answer_max_tokens)
-
-    batch_results = post_process_answers(batch, responses, apply_regex)
-    return batch_results
+    return llm.answer(batch_entries, max_tokens=LLM_answer_max_tokens)
 
 
 @utils.timer_dec
@@ -303,12 +322,12 @@ def save_results_to(batch_results: list[tuple[int, str, str, str]],
 
 
 @utils.timer_dec
-def post_process_answers(
-        batch: list[DataInstance],
+def post_process_responses(
+        batch_data: list[DataInstance],
         llm_responses: list[dict],
         apply_regex: bool = True) -> list[tuple[int, str, str, str]]:
     batch_results = list()
-    for instance, response in zip(batch, llm_responses):
+    for instance, response in zip(batch_data, llm_responses):
         final_answer = response['answer'].split("\n")[0]
         if apply_regex:
             target_info = re.findall("e[0-9]+", response['answer'])
@@ -380,6 +399,8 @@ if __name__ == "__main__":
     else:
         relations_order = 'as_is'
 
+    is_nli = True if model_type == 'nli' else False
+
     run(args.data, llm, args.results_path, relations_order, args.n_graphs,
         args.n_instances, args.batch_s, args.starting_batch, args.no_progress,
-        args.apply_regex)
+        args.apply_regex, is_nli)
