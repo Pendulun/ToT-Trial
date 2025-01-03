@@ -168,3 +168,43 @@ class HuggingFaceChatLLM(LLM):
             })
 
         return responses
+
+
+class HuggingFaceNLIModel(LLM):
+
+    def __init__(self, model_name="", device='cpu', **kwargs):
+        super().__init__(model_name, **kwargs)
+        if 'ModernBERT' in model_name:
+            kwargs['model_kwargs'] = {"reference_compile": False}
+
+        self.pipeline = pipeline("text-classification",
+                                 model=self.model_name,
+                                 device=device,
+                                 **kwargs)
+
+    def answer(self, data: list[dict[str, str]], **kwargs) -> list[dict]:
+        """
+        Data is a list of dict of instances. For this LLM, each dict must have 'question'
+        and 'context' keys. This allows for batched processing
+
+        Return a list of dicts of answers. Each dict has a 'answer' and 'score' keys.
+        """
+        premises = [item["question"] for item in data]
+        hypotheses = [item["context"] for item in data]
+
+        inputs = [{
+            'text': premise,
+            'text_pair': hypothesis
+        } for premise, hypothesis in zip(premises, hypotheses)]
+
+        results = self.pipeline(inputs)
+
+        if type(results) == dict:
+            results = [results]
+
+        results = [{
+            'answer': result['label'],
+            'score': result['score']
+        } for result in results]
+
+        return results

@@ -9,7 +9,7 @@ import re
 from dotenv import dotenv_values
 from tqdm import tqdm
 
-from evaluators import LLM, URLLLM, HuggingFaceQuestionAnsweringLLM, HuggingFaceChatLLM
+from evaluators import LLM, URLLLM, HuggingFaceQuestionAnsweringLLM, HuggingFaceChatLLM, HuggingFaceNLIModel
 from graph import StarGraph
 import utils
 
@@ -111,6 +111,15 @@ def config_argparser() -> argparse.ArgumentParser:
         default=False,
         required=False,
         help="If it should use the chat pipeline from Hugging Face")
+
+    parser.add_argument(
+        "--nli",
+        action='store_true',
+        default=False,
+        required=False,
+        help="If it should use a NLI model from HuggingFace. The model name "\
+            "should be given by the model_name arg. "
+    )
 
     parser.add_argument("--results_path",
                         type=str,
@@ -340,17 +349,21 @@ if __name__ == "__main__":
         model_type = 'qa'
     elif args.chat:
         model_type = 'chat'
+    elif args.nli:
+        model_type = 'nli'
     else:
         model_type = 'local'
 
     type_to_model = {
         'qa': HuggingFaceQuestionAnsweringLLM,
         'local': URLLLM,
-        'chat': HuggingFaceChatLLM
+        'chat': HuggingFaceChatLLM,
+        'nli': HuggingFaceNLIModel
     }
 
-    llm = type_to_model[model_type](args.model_name, args.url,
-                                    secrets['API_KEY'])
+    llm = type_to_model[model_type](args.model_name,
+                                    url=args.url,
+                                    token=secrets['API_KEY'])
 
     if not args.print_times:
         utils.PRINT_ENABLED = False
